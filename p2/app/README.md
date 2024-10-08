@@ -88,3 +88,5 @@ Retorna as coordenadas dos rostos detectados na última imagem enviada.
 - Uvicorn
 
 Essas dependências são instaladas automaticamente ao construir a imagem Docker com base no arquivo `requirements.txt`.
+
+vídeo de da p2: https://youtu.be/tX6leh7SO3Q?si=03xIdFZUUR0hK2PO
