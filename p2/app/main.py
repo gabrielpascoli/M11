@@ -5,55 +5,34 @@ from datetime import datetime
 
 app = FastAPI()
 
-detected_faces = []  # Lista para armazenar as coordenadas dos rostos detectados
+rostos_detectados = []
 
-@app.get("/")
-def root():
-    return {"message": "Hello World"}
-
-# Carregar o classificador em cascata para detecção de rostos
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+detetive_de_rostos = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 @app.post("/upload")
-async def upload_image(file: UploadFile = File(...)):
-    # Ler o conteúdo do arquivo enviado
-    content = await file.read()
-    
-    # Converter o conteúdo do arquivo para um array numpy
-    np_array = np.frombuffer(content, np.uint8)
-    
-    # Decodificar a imagem do array numpy
-    image = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
-    
-    # Converter a imagem para escala de cinza
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    # Detectar rostos na imagem
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+async def enviar_imagem(arquivo: UploadFile = File(...)):
+    conteudo = await arquivo.read()
+    np_array = np.frombuffer(conteudo, np.uint8)
+    imagem = cv2.imdecode(np_array, cv2.IMREAD_COLOR)
+    tons_de_cinza = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)
+    rostos = detetive_de_rostos.detectMultiScale(tons_de_cinza, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
 
-    # Armazenar as coordenadas dos rostos detectados
-    detected_faces = [(x, y, w, h) for (x, y, w, h) in faces]
-    
-    # Desenhar retângulos ao redor dos rostos detectados
-    for (x, y, w, h) in faces:
-        cv2.rectangle(image, (x, y), (x + w, y + h), (255, 0, 0), 2)
-    
-    # Obter a data e hora atual
+    rostos_detectados.clear()
+    rostos_detectados.extend([(x, y, w, h) for (x, y, w, h) in rostos])
+
+    for (x, y, w, h) in rostos:
+        cv2.rectangle(imagem, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
     timestamp = datetime.now().strftime("%d%m%Y%H%M%S")
-    
-    # Criar o nome do arquivo com o timestamp
-    filename = f"/app/images/received_image-{timestamp}.jpg"
-    
-    # Salvar a imagem processada no diretório especificado
-    cv2.imwrite(filename, image)
-    
-    return {"message": f"Imagem recebida e salva como {filename}"}
+    nome_do_arquivo = f"/app/images/imagem_detectada-{timestamp}.jpg"
+    cv2.imwrite(nome_do_arquivo, imagem)
 
-@app.get("/get_faces")
-def get_faces():
-    # Retornar as coordenadas dos rostos detectados - Ponderada 3
-    return {"faces": detected_faces}
+    return {"mensagem": f"Imagem enviada com sucesso e salva como {nome_do_arquivo}"}
+
+@app.get("/ver_rostos")
+def ver_rostos():
+    return {"rostos_detectados": rostos_detectados}
 
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0" , port=8000, debug=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, debug=True)
