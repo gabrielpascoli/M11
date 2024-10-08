@@ -27,7 +27,7 @@ Este projeto implementa uma API simples para detecção de rostos em imagens uti
 
 3. **Execute o container Docker**:
     ```bash
-    docker run -d -p 8000:8000 deteccao-de-rostos
+    
     docker run -p 8000:8000 -v $(pwd)/app/imagens:/app/imagens deteccao-de-rostos
     ```
 
